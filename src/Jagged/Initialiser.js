@@ -1,21 +1,22 @@
-Class.define(
+define(
 
-'Jagged.Initialiser',
+'require Jagged.Helper.String',
+'require Jagged.Templater',
+'require Jagged.Injector',
+
+'class Jagged.Initialiser',
 {
 	
-	Require: [
-		'Jagged.Helper.String',
-		'Jagged.Templater',
-		'Jagged.Injector'
-	],
+	'private injector (Jagged.Injector)': null,
+	'private namespaces ([string])': null,
+	'private allElements ([HTMLElement])': [],
+	'private directiveClassLoading (object)': null,
+	'private loadingPaused (boolean)': false,
 	
-	'private namespaces': null,
-	'private allElements': [],
-	'private directiveClassesLoading': [],
-	'private injector': null,
-	
-	'public construct : [string] Jagged.Injector': function(customNamespaces, injector)
+	'public construct ([string], Jagged.Injector) -> undefined': function(customNamespaces, injector)
 	{
+		
+		injector.registerSingleton(this);
 		
 		// Add Jagged.Directive to the
 		// list of supplied namespaces
@@ -33,26 +34,41 @@ Class.define(
 		}
 		
 		// Save the updated namespaces and the injector
-		this.set('namespaces', customNamespaces);
-		this.set('injector', injector);
+		this.namespaces(customNamespaces);
+		this.injector(injector);
 		
 		// Get all elements in the document and save them
 		var allElements = document.getElementsByTagName('*');
-		var thisAllElements = this.get('allElements');
+		var thisAllElements = this.allElements();
 		for (var i = 0; i < allElements.length; i++) {
 			thisAllElements.push(allElements[i]);
 		}
+		
+		injector.resolve('Jagged.Templater').pauseRendering();
 		
 		// Start inspecting all the elements
 		this.inspectNextElement();
 		
 	},
 	
-	'private undefined inspectNextElement : undefined': function()
+	'public pauseLoading (Jagged.IDirective) -> undefined': function(directive)
+	{
+		if (directive === this.directiveClassLoading().instance) this.loadingPaused(true);
+	},
+	
+	'public unPauseLoading (Jagged.IDirective) -> undefined': function(directive)
+	{
+		if (directive === this.directiveClassLoading().instance) {
+			this.loadingPaused(false);
+			this.inspectNextElement();
+		}
+	},
+	
+	'private inspectNextElement () -> undefined': function()
 	{
 		
 		// Get the first element in the stack
-		var element = this.get('allElements').shift();
+		var element = this.allElements().shift();
 		
 		// If the element variable is empty,
 		// we have worked our way through the
@@ -69,7 +85,7 @@ Class.define(
 		
 		// Save a reference to the namespaces
 		// we are interested in
-		var namespaces = this.get('namespaces');
+		var namespaces = this.namespaces();
 		
 		// Loop through all attributes
 		// on the current directive
@@ -119,42 +135,36 @@ Class.define(
 			// Record that we are loading the class so
 			// that we can tell later whether we have
 			// finished processing or not
-			this.get('directiveClassesLoading').push({
+			this.directiveClassLoading({
 				className: className,
 				element: element,
-				tagValue: directivesFound[i].tagValue
+				tagValue: directivesFound[i].tagValue,
+				instance: null
 			});
 			
 			// Require the directive class, running the
 			// 'runDirective' method when we finish
-			Class.require(className, 'runDirective');
+			require(className, 'runDirective');
 			
 		}
 	},
 	
-	'private undefined runDirective : string': function(directiveClass)
+	'private runDirective (string) -> undefined': function(directiveClass)
 	{
 		
-		// Remove this class from the list
-		// of loading directives, keeping a
-		// reference to the relevent information
-		var directiveClassesLoading = this.get('directiveClassesLoading');
-		for (var i = 0; i < directiveClassesLoading.length; i++) {
-			if (directiveClassesLoading[i].className == directiveClass) {
-				var directiveData = directiveClassesLoading.splice(i, 1)[0];
-			}
-		}
-		
-		var directive = this.get('injector').resolve(directiveClass);
+		var directive = this.injector().resolve(directiveClass);
 		
 		// Ensure the instanciated class is an instance
 		// of Jagged.IDirective, throwing an error if not
-		if (!directive.instanceOf('Jagged.IDirective')) {
+		if (!directive.conformsTo('Jagged.IDirective')) {
 			throw new Error(
 				'Identified directive class must implement ' +
 				'Jagged.IDirective (Directive class: ' + classParts.join('.') + ')'
 			);
 		}
+		
+		var directiveData = this.directiveClassLoading();
+		directiveData.instance = directive;
 		
 		// Allow the directive to initialise by providing
 		// it the element that it was declared on and also
@@ -162,18 +172,18 @@ Class.define(
 		directive.initialise(directiveData.element, directiveData.tagValue);
 		
 		// Move on to the next element in the queue
-		this.inspectNextElement();
+		if (!this.loadingPaused()) this.inspectNextElement();
 		
 	},
 	
-	'private undefined parseTemplates : undefined': function()
+	'private parseTemplates () -> undefined': function()
 	{
 		// At this stage, we know the whole
 		// document needs rendering so we tell
 		// the templater to do just that
 		// @todo Actually, this isn't true - we should
 		// provide the root of any trees we have identified
-		this.get('injector').resolve('Jagged.Templater').render(document);
+		this.injector().resolve('Jagged.Templater').unPauseRendering().render(document);
 	}
 	
 });

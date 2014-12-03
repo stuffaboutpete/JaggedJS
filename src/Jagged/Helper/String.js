@@ -1,14 +1,14 @@
-Class.define(
+define(
 
-'Jagged.Helper.String',
+'class Jagged.Helper.String',
 {
 	
-	'static public string uppercaseFirst : string': function(string)
+	'static public uppercaseFirst (string) -> string': function(string)
 	{
 		return string.charAt(0).toUpperCase() + string.slice(1);
 	},
 	
-	'static public string underscoreToPascalCasing : string': function(string)
+	'static public underscoreToPascalCasing (string) -> string': function(string)
 	{
 		var parts = string.split('_');
 		for (var i = 0; i < parts.length; i++) {
@@ -17,7 +17,7 @@ Class.define(
 		return parts.join('');
 	},
 	
-	'static public string hyphenToPascalCasing : string': function(string)
+	'static public hyphenToPascalCasing (string) -> string': function(string)
 	{
 		var parts = string.split('-');
 		for (var i = 0; i < parts.length; i++) {
@@ -26,7 +26,7 @@ Class.define(
 		return parts.join('');
 	},
 	
-	'static public string pascalToHyphenCasing : string': function(string)
+	'static public pascalToHyphenCasing (string) -> string': function(string)
 	{
 		var parts = [];
 		var currentString = '';
