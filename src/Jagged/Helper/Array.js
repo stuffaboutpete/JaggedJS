@@ -14,6 +14,19 @@ define(
 		return array.filter(function(element, position, self) {
 			return self.indexOf(element) == position;
 		});
+	},
+	
+	'static public containsElement (mixed, array) -> boolean': function(element, array)
+	{
+		return (array.indexOf(element) > -1);
+	},
+	
+	'static public removeElement (mixed, array) -> array': function(element, array)
+	{
+		var index = array.indexOf(element);
+		// @todo Throw if -1
+		array.splice(index, 1);
+		return array;
 	}
 	
 });

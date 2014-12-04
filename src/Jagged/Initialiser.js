@@ -1,8 +1,10 @@
 define(
 
 'require Jagged.Helper.String',
+'require Jagged.Helper.Array',
 'require Jagged.Templater',
 'require Jagged.Injector',
+'require Jagged.IDirective',
 
 'class Jagged.Initialiser',
 {
@@ -10,8 +12,8 @@ define(
 	'private injector (Jagged.Injector)': null,
 	'private namespaces ([string])': null,
 	'private allElements ([HTMLElement])': [],
-	'private directiveClassLoading (object)': null,
-	'private loadingPaused (boolean)': false,
+	'private directiveClassesLoading ([object])': [],
+	'private loadingPausedDirectives ([Jagged.IDirective])': [],
 	
 	'public construct ([string], Jagged.Injector) -> undefined': function(customNamespaces, injector)
 	{
@@ -53,13 +55,13 @@ define(
 	
 	'public pauseLoading (Jagged.IDirective) -> undefined': function(directive)
 	{
-		if (directive === this.directiveClassLoading().instance) this.loadingPaused(true);
+		this.loadingPausedDirectives('push', directive);
 	},
 	
 	'public unPauseLoading (Jagged.IDirective) -> undefined': function(directive)
 	{
-		if (directive === this.directiveClassLoading().instance) {
-			this.loadingPaused(false);
+		if (Jagged.Helper.Array.containsElement(directive, this.loadingPausedDirectives())) {
+			Jagged.Helper.Array.removeElement(directive, this.loadingPausedDirectives());
 			this.inspectNextElement();
 		}
 	},
@@ -135,7 +137,8 @@ define(
 			// Record that we are loading the class so
 			// that we can tell later whether we have
 			// finished processing or not
-			this.directiveClassLoading({
+			
+			this.directiveClassesLoading('push', {
 				className: className,
 				element: element,
 				tagValue: directivesFound[i].tagValue,
@@ -152,6 +155,14 @@ define(
 	'private runDirective (string) -> undefined': function(directiveClass)
 	{
 		
+		var directiveClassesLoading = this.directiveClassesLoading();
+		for (var i = 0; i < directiveClassesLoading.length; i++) {
+			if (directiveClassesLoading[i].className == directiveClass) {
+				var directiveData = directiveClassesLoading.splice(i, 1)[0];
+				break;
+			}
+		}
+		
 		var directive = this.injector().resolve(directiveClass);
 		
 		// Ensure the instanciated class is an instance
@@ -163,7 +174,6 @@ define(
 			);
 		}
 		
-		var directiveData = this.directiveClassLoading();
 		directiveData.instance = directive;
 		
 		// Allow the directive to initialise by providing
@@ -172,7 +182,10 @@ define(
 		directive.initialise(directiveData.element, directiveData.tagValue);
 		
 		// Move on to the next element in the queue
-		if (!this.loadingPaused()) this.inspectNextElement();
+		// if we aren't waiting for anything
+		if (!this.directiveClassesLoading().length && !this.loadingPausedDirectives().length) {
+			this.inspectNextElement();
+		}
 		
 	},
 	
