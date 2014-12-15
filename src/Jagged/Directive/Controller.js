@@ -4,17 +4,22 @@ define(
 'require Jagged.Parser',
 'require Jagged.Parser.Member.Property',
 'require Jagged.Parser.Member.Method',
+'require Jagged.Injector',
+'require Jagged.Initialiser',
+'require Jagged.ScopeHandler',
 
 'class Jagged.Directive.Controller implements Jagged.IDirective',
 {
 	
 	'private controller (Jagged.Directive.Controller.IController)': null,
 	'private element (HTMLElement)': null,
+	'private injector (Jagged.Injector)': null,
 	'private initialiser (Jagged.Initialiser)': null,
 	'private scopeHandler (Jagged.ScopeHandler)': null,
 	
-	'public construct (Jagged.Initialiser, Jagged.ScopeHandler) -> undefined': function(initialiser, scopeHandler)
+	'public construct (Jagged.Injector, Jagged.Initialiser, Jagged.ScopeHandler) -> undefined': function(injector, initialiser, scopeHandler)
 	{
+		this.injector(injector);
 		this.initialiser(initialiser);
 		this.scopeHandler(scopeHandler);
 	},
@@ -48,12 +53,7 @@ define(
 	
 	'private createController (string) -> object': function(controllerClass)
 	{
-		var classParts = controllerClass.split('.');
-		var controllerClass = window;
-		for (var i = 0; i < classParts.length; i++) {
-			controllerClass = controllerClass[classParts[i]];
-		}
-		var controller = new controllerClass();
+		var controller = this.injector().resolve(controllerClass);
 		if (!controller.conformsTo('Jagged.Directive.Controller.IController')) {
 			throw new Error(
 				'Controller is not an instance of Jagged.Directive.Controller.IController ' +
