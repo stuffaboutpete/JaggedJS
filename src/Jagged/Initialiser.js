@@ -81,6 +81,12 @@ define(
 			return;
 		}
 		
+		// Ensure the element is still in the DOM
+		if (!this.isInDocument(element)) {
+			this.inspectNextElement();
+			return;
+		}
+		
 		// Keep an array of directives that we
 		// find as we search the document below 
 		var directivesFound = [];
@@ -197,6 +203,25 @@ define(
 		// @todo Actually, this isn't true - we should
 		// provide the root of any trees we have identified
 		this.injector().resolve('Jagged.Templater').unPauseRendering().render(document);
+	},
+	
+	'private isInDocument (HTMLElement) -> boolean': function(element)
+	{
+		
+		// If the parent node is the document
+		// object then we know this element is
+		// in the DOM
+		if (element.parentNode === document) return true;
+		
+		// Otherwise do the same check on the
+		// parent element, if it exists
+		element = element.parentElement;
+		if (element) return this.isInDocument(element);
+		
+		// If it doesn't exist, we know the
+		// element has been disconnected
+		return false;
+		
 	}
 	
 });
