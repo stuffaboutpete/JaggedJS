@@ -1,6 +1,6 @@
 {
 	"name": "jaggedjs",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"dependencies": {
 		"classyjs": "git://github.com/peteonline/ClassyJS.git#*",
 		"jquery": "1.*"
