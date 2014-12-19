@@ -13,25 +13,73 @@ define(
 	
 	'public registerProperties (HTMLElement, object) -> undefined': function(element, properties)
 	{
-		var hasProperties = false;
-		for (var i in properties) {
-			if (properties.hasOwnProperty(i)) {
-				hasProperties = true;
-				break;
+		
+		// Get all the element / property associations
+		var data = this.data();
+		
+		// We will need to know whether the
+		// element is already registered in
+		// the data and also whether any
+		// changes were made to the data
+		var elementFound = false;
+		var changeMade = false;
+		
+		// If the element is already registered...
+		for (var i = 0; i < data.length; i++) {
+			if (data[i].element !== element) continue;
+			
+			// Loop through the new properties object
+			for (var j in properties) {
+				
+				// If any new property is not the same
+				// as the existing one or there is no
+				// existing one... 
+				if (data[i].properties[j] !== properties[j]) {
+					
+					// Bind to the new property
+					// change event and save it
+					if (typeof properties[j].bind == 'function') {
+						properties[j].bind('change', 'handleObjectChange');
+					}
+					data[i].properties[j] = properties[j];
+					
+					// Record that we made a change
+					changeMade = true;
+					
+				}
+				
 			}
+			
+			// If we got here, we did find the
+			// element and we can stop iterating
+			elementFound = true;
+			break;
+			
 		}
-		if (hasProperties) {
+		
+		// If no element was found, add
+		// it to the data
+		if (!elementFound) {
 			this.data('push', {
-				element: element,
+				element:    element,
 				properties: properties
 			});
-		}
-		for (var i in properties) {
-			if (typeof properties[i].bind == 'function') {
-				properties[i].bind('change', 'handleObjectChange');
+			for (var i in properties) {
+				if (typeof properties[i].bind == 'function') {
+					properties[i].bind('change', 'handleObjectChange');
+				}
 			}
 		}
-		this.informTemplater(element);
+		
+		// If any change was made, ensure the
+		// data variable is up to date
+		if (changeMade) this.data(data);
+		
+		// If the element is new or a change
+		// has been made to an existing element,
+		// inform the templater
+		if (!elementFound || changeMade) this.informTemplater(element);
+		
 	},
 	
 	'public getScopeObject (object) -> object': function(element)

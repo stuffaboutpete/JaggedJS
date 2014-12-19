@@ -27,6 +27,29 @@ define(
 		// @todo Throw if -1
 		array.splice(index, 1);
 		return array;
+	},
+	
+	'static public toArray (object) -> array': function(object)
+	{
+		var array = [];
+		for (var i in object) {
+			if (object.hasOwnProperty(i)) array.push(object[i]);
+		}
+		return array;
+	},
+	
+	'static public enumerateToArray (object) -> array': function(object)
+	{
+		var array = [];
+		for (var i = 0; i < object.length; i++) {
+			array.push(object[i]);
+		}
+		return array;
+	},
+	
+	'static public inArray (mixed, array) -> boolean': function(element, array)
+	{
+		return (array.indexOf(element) > -1) ? true : false;
 	}
 	
 });
