@@ -277,7 +277,7 @@ define(
 		if (!directive.conformsTo('Jagged.IDirective')) {
 			throw new Error(
 				'Identified directive class must implement ' +
-				'Jagged.IDirective (Directive class: ' + classParts.join('.') + ')'
+				'Jagged.IDirective (Directive class: ' + directiveClass + ')'
 			);
 		}
 		
