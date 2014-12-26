@@ -153,7 +153,7 @@ define(
 			// any supplied to the constructor, save the
 			// attribute and its value
 			for (var j = 0; j < namespaces.length; j++) {
-				if (element.attributes[i].name.match(namespaces[j] + '\..*')) {
+				if (element.attributes[i].name.match('^(?:\\s*)?' + namespaces[j].replace('.', '\\.') + '\\..*(?:\s*)?')) {
 					directivesFound.push({
 						tagName: element.attributes[i].name,
 						tagValue: element.attributes[i].value
