@@ -100,7 +100,7 @@ define(
 		
 		// If there are elements that have been
 		// specifically requested should be
-		// rendered, move all their ancestors
+		// rendered, move all their descendants
 		// into the queue for processing
 		if (this.directiveOuterElementQueue().length) this.processDirectiveOuterElementQueue();
 		
